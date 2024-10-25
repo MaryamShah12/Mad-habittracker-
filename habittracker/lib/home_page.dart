@@ -1,7 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:habittracker/util/habit_tile.dart';
+import 'package:habittracker/db/database_helper.dart';
+import 'package:habittracker/models/habit_model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,90 +11,123 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  List<Habit> _habitList = [];
 
-  // overall habit summary
-  List habitList = [
-    // [habitName, habitStarted, timeSpent(sec), timeGoal(min)]
-    ['Exercise', false,0,1],
-    ['Read', false,0,20],
-    ['Meditate', false,0,20],
-    ['Code', false,0,40],
-  ];
-void habitStarted(int index){
- // note what the start time is
-  var startTime = DateTime.now();
-
-  // include the time already elapsed
-int elapsedTime = habitList[index][2];
-  // habit started or  stopped
-  setState(() {
-    habitList[index][1]=!habitList[index][1];
-  });
-
-//  keep the time going
-if(habitList[index][1]){
-  Timer.periodic(Duration(seconds: 1), (timer){
-    setState(() {
-      // check when the user has stopped the timer
-      if(!habitList[index][1]){
-        timer.cancel();
-      }
-
-// calculate the time elapsed by comparing current time and start time
-      var currentTime = DateTime.now();
-      habitList[index][2] = elapsedTime +
-          currentTime.second - startTime.second +
-          60 * (currentTime.minute - startTime.minute) +
-          60 * 60 * (currentTime.hour - startTime.hour);
-
-
-      //
-
-    });
-  });
-}
-}
-
-
-  void settingOpened(int index){
-  showDialog(
-  context: context,
-    builder:(context){
-    return AlertDialog(
-    title: Text('Setting for ' + habitList[index][0]),
-    );
-    },
-    );
-    
-
+  @override
+  void initState() {
+    super.initState();
+    _loadHabits();
   }
+
+  Future<void> _loadHabits() async {
+    final habits = await DatabaseHelper.instance.getHabits();
+    setState(() {
+      _habitList = habits;
+    });
+  }
+
+  void _deleteHabit(int index) async {
+    await DatabaseHelper.instance.deleteHabit(index);
+    _loadHabits();
+  }
+
+  // Dialog for adding/editing a habit
+  Future<void> _showHabitDialog({Habit? habit}) async {
+    final TextEditingController nameController = TextEditingController(text: habit?.name ?? '');
+    final TextEditingController timeGoalController = TextEditingController(text: habit?.timeGoal.toString() ?? '');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(habit == null ? 'Add Habit' : 'Edit Habit'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Habit Name'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: timeGoalController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Time Goal (minutes)'),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameController.text.isNotEmpty && timeGoalController.text.isNotEmpty) {
+                  final String name = nameController.text;
+                  final int timeGoal = int.parse(timeGoalController.text);
+
+                  if (habit == null) {
+                    // Add new habit
+                    await DatabaseHelper.instance.addHabit(
+                      Habit(name: name, timeGoal: timeGoal),
+                    );
+                  } else {
+                    // Update existing habit
+                    await DatabaseHelper.instance.updateHabit(
+                      Habit(id: habit.id, name: name, timeGoal: timeGoal),
+                    );
+                  }
+                  _loadHabits(); // Refresh the habit list
+                  Navigator.pop(context); // Close dialog
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[300],
       appBar: AppBar(
         backgroundColor: Colors.grey[900],
-        title: Text('Consistency in key'),
+        title: const Text('Consistency is Key'),
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => _showHabitDialog(), // Open dialog to add a new habit
+          ),
+        ],
       ),
       body: ListView.builder(
-        itemCount: habitList.length,
-          itemBuilder: ((context, index){
-            return HabitTile(
-                habitName: habitList[index][0],
-                onTap: (){
-                  habitStarted(index);
-                },
-                settingTapped: (){
-                  settingOpened(index);
-                },
-                habitStarted: habitList[index][1],
-                timeSpent: habitList[index][2],
-                timeGoal: habitList[index][3],
-                );
-          }))
-
-
+        itemCount: _habitList.length,
+        itemBuilder: (context, index) {
+          final habit = _habitList[index];
+          return HabitTile(
+            habitName: habit.name,
+            habitStarted: habit.isStarted,
+            timeSpent: habit.timeSpent,
+            timeGoal: habit.timeGoal,
+            onTap: () {
+              // Start/Stop habit timer logic here
+            },
+            settingTapped: () {
+              _showHabitDialog(habit: habit); // Open dialog to edit the habit
+            },
+            onDelete: () {
+              _deleteHabit(index); // Use index for deletion
+            },
+          );
+        },
+      ),
     );
   }
 }
