@@ -13,31 +13,26 @@ class DatabaseHelper {
     return _habitBox!;
   }
 
-  // Add a habit to the database
   Future<void> addHabit(Habit habit) async {
     final box = await habitBox;
-    await box.add(habit); // Automatically generates an id
+    await box.add(habit);
   }
 
-  // Update an existing habit
   Future<void> updateHabit(Habit habit) async {
     final box = await habitBox;
-    await box.put(habit.id!, habit); // Use the id as the key
+    await box.put(habit.id!, habit);
   }
 
-  // Delete a habit by index
   Future<void> deleteHabit(int index) async {
     final box = await habitBox;
     await box.deleteAt(index);
   }
 
-  // Retrieve all habits
   Future<List<Habit>> getHabits() async {
     final box = await habitBox;
     return box.values.toList();
   }
 
-  // Close the database
   Future<void> close() async {
     final box = await habitBox;
     await box.close();

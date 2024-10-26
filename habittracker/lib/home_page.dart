@@ -31,7 +31,6 @@ class _HomePageState extends State<HomePage> {
     _loadHabits();
   }
 
-  // Dialog for adding/editing a habit
   Future<void> _showHabitDialog({Habit? habit}) async {
     final TextEditingController nameController = TextEditingController(text: habit?.name ?? '');
     final TextEditingController timeGoalController = TextEditingController(text: habit?.timeGoal.toString() ?? '');
@@ -70,12 +69,10 @@ class _HomePageState extends State<HomePage> {
                   final int timeGoal = int.parse(timeGoalController.text);
 
                   if (habit == null) {
-                    // Add new habit
                     await DatabaseHelper.instance.addHabit(
                       Habit(name: name, timeGoal: timeGoal),
                     );
                   } else {
-                    // Update existing habit
                     await DatabaseHelper.instance.updateHabit(
                       Habit(id: habit.id, name: name, timeGoal: timeGoal),
                     );

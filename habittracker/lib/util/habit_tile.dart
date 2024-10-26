@@ -5,9 +5,9 @@ class HabitTile extends StatelessWidget {
   final bool habitStarted;
   final int timeSpent;
   final int timeGoal;
-  final Function onTap;
-  final Function settingTapped;
-  final Function onDelete;
+  final Function()? onTap;
+  final Function()? settingTapped;
+  final Function()? onDelete;
 
   const HabitTile({
     Key? key,
@@ -15,30 +15,30 @@ class HabitTile extends StatelessWidget {
     required this.habitStarted,
     required this.timeSpent,
     required this.timeGoal,
-    required this.onTap,
-    required this.settingTapped,
-    required this.onDelete,
+    this.onTap,
+    this.settingTapped,
+    this.onDelete,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(habitName),
-      subtitle: Text('Goal: $timeGoal minutes, Spent: $timeSpent minutes'),
-      onTap: () => onTap(),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      subtitle: Text('Time Goal: $timeGoal minutes, Time Spent: $timeSpent minutes'),
+      trailing: Wrap(
+        spacing: 12,
+        children: <Widget>[
           IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => settingTapped(),
+            icon: const Icon(Icons.edit),
+            onPressed: settingTapped,
           ),
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () => onDelete(),
+            onPressed: onDelete,
           ),
         ],
       ),
+      onTap: onTap,
     );
   }
 }

@@ -1,8 +1,8 @@
 import 'package:hive/hive.dart';
 
-part 'habit_model.g.dart'; // Add this line for code generation
+part 'habit_model.g.dart';
 
-@HiveType(typeId: 0) // Specify a typeId
+@HiveType(typeId: 0)
 class Habit {
   @HiveField(0)
   final int? id;

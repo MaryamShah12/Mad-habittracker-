@@ -74,11 +74,11 @@ class _AddEditHabitState extends State<AddEditHabit> {
               ),
               TextFormField(
                 initialValue: _timeGoal.toString(),
-                decoration: const InputDecoration(labelText: 'Time Goal (min)'),
+                decoration: const InputDecoration(labelText: 'Time Goal (minutes)'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a time goal';
                   }
                   return null;
                 },
@@ -98,3 +98,4 @@ class _AddEditHabitState extends State<AddEditHabit> {
     );
   }
 }
+
